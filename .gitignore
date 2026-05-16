@@ -1,0 +1,36 @@
+# Rust
+target/
+
+# SQLx
+.sqlx/
+
+# Environment
+.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Neovim swap files
+*.swp
+*.swo
+
+# Docker volumes
+postgres_data/
+
+# Coverage
+coverage/
+
+# Temporary
+tmp/
+temp/
+
+# Cargo
+Cargo.lock
