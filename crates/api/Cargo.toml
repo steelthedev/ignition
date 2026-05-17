@@ -15,7 +15,7 @@ common = { path = "../common" }
 queue = { path = "../queue" }
 storage = { path = "../storage" }
 types = { path = "../types" }
-axum = "0.8.9"
+axum = { version = "0.8.9", features = ["ws"] }
 anyhow = "1.0.102"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
@@ -28,3 +28,5 @@ sqlx = { version = "0.8", features = [
 uuid = { version = "1", features = ["v4", "serde"] }
 
 chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"
+futures-util = "0.3.32"
