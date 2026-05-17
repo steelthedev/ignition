@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use common::{executor::TxExecutor, rpc::RpcManager};
 use queue::Queue;
 use sqlx::PgPool;
 use tokio::sync::broadcast;
@@ -8,4 +11,6 @@ pub struct AppState {
     pub queue: Queue,
 
     pub broadcaster: broadcast::Sender<common::events::TxEvent>,
+    pub executor: Arc<dyn TxExecutor>,
+    pub rpc: Arc<dyn RpcManager>,
 }

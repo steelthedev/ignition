@@ -30,3 +30,8 @@ uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8"
 futures-util = "0.3.32"
+async-trait = "0.1.89"
+dotenvy = "0.15.7"
+solana-client = "3.1.14"
+solana-sdk = "4.0.1"
+

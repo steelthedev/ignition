@@ -1,24 +1,30 @@
+mod executor;
 mod routes;
+mod rpc;
 mod state;
 mod types;
+
+use std::{env, sync::Arc};
 
 use axum::Router;
 use common::tx_status::TxStatus;
 use queue::{Queue, TxJob};
 
+use solana_client::nonblocking::rpc_client::RpcClient;
 use sqlx::postgres::PgPoolOptions;
 use tokio::{net::TcpListener, sync::broadcast};
 use tracing::info;
 
-use crate::state::AppState;
+use crate::{executor::MockExecutor, rpc::SolanaRpcManager, state::AppState};
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
+    dotenvy::dotenv().unwrap();
 
     let db = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://ignition:ignitionpassword@localhost:5432/ignition")
+        .connect(env::var("DATABASE_URL").unwrap().as_str())
         .await
         .unwrap();
 
@@ -26,17 +32,30 @@ async fn main() {
 
     let (broadcaster, _) = broadcast::channel(100);
 
+    let executor = Arc::new(MockExecutor);
+    let rpc = Arc::new(SolanaRpcManager {
+        client: RpcClient::new(env::var("RPC_URL").unwrap()),
+    });
+
     let state = AppState {
         db,
         queue,
         broadcaster,
+        executor,
+        rpc,
     };
 
     tokio::spawn(worker_loop(reciever, state.clone()));
 
     let app = Router::new().merge(routes::routes()).with_state(state);
 
-    let listener = TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    let listener = TcpListener::bind(format!(
+        "{}:{}",
+        env::var("IP").unwrap().as_str(),
+        env::var("PORT").unwrap().as_str()
+    ))
+    .await
+    .unwrap();
 
     info!("App is running on port 8000");
 
@@ -45,6 +64,12 @@ async fn main() {
 
 async fn worker_loop(mut receiver: tokio::sync::mpsc::Receiver<queue::TxJob>, state: AppState) {
     while let Some(job) = receiver.recv().await {
+        if let Err(err) = state.rpc.healthcheck().await {
+            println!("Rpc healthcheck failed: {:?}", err);
+
+            continue;
+        }
+
         println!("Processing tx: {:?}", job.tx_id);
 
         sqlx::query(
@@ -68,9 +93,9 @@ async fn worker_loop(mut receiver: tokio::sync::mpsc::Receiver<queue::TxJob>, st
             })
             .unwrap();
 
-        let success = rand::random::<bool>();
+        let result = state.executor.execute(job.tx_id).await;
 
-        if success {
+        if result.success {
             sqlx::query(
                 r#"
             UPDATE transactions
