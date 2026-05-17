@@ -34,7 +34,7 @@ pub async fn submit_tx(
         "#,
     )
     .bind(id)
-    .bind(payload.payload)
+    .bind(&payload.payload)
     .bind(&status.as_str())
     .bind(created)
     .execute(&state.db)
@@ -46,6 +46,7 @@ pub async fn submit_tx(
         .enqueue(queue::TxJob {
             tx_id: id,
             retries: 0,
+            payload: payload.payload,
         })
         .await;
 

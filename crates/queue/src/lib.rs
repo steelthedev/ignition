@@ -4,6 +4,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone)]
 pub struct TxJob {
     pub tx_id: Uuid,
+    pub payload: String,
     pub retries: u32,
 }
 

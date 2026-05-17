@@ -8,4 +8,5 @@ anyhow = "1.0.102"
 async-trait = "0.1.89"
 serde = { version = "1.0.228", features = ["derive"] }
 uuid = { version = "1.23.1", features = ["serde"] }
-
+solana-sdk = "3.0.0"
+solana-client = "3.0.0"

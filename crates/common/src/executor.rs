@@ -9,5 +9,5 @@ pub struct ExecutionResult {
 
 #[async_trait]
 pub trait TxExecutor: Send + Sync {
-    async fn execute(&self, tx_id: Uuid) -> ExecutionResult;
+    async fn execute(&self, tx_id: Uuid, payload: String) -> ExecutionResult;
 }

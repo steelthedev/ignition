@@ -32,10 +32,10 @@ async fn main() {
 
     let (broadcaster, _) = broadcast::channel(100);
 
-    let executor = Arc::new(MockExecutor);
     let rpc = Arc::new(SolanaRpcManager {
         client: RpcClient::new(env::var("RPC_URL").unwrap()),
     });
+    let executor = Arc::new(MockExecutor { rpc: rpc.clone() });
 
     let state = AppState {
         db,
@@ -93,7 +93,7 @@ async fn worker_loop(mut receiver: tokio::sync::mpsc::Receiver<queue::TxJob>, st
             })
             .unwrap();
 
-        let result = state.executor.execute(job.tx_id).await;
+        let result = state.executor.execute(job.tx_id, job.payload.clone()).await;
 
         if result.success {
             sqlx::query(
@@ -155,6 +155,7 @@ async fn worker_loop(mut receiver: tokio::sync::mpsc::Receiver<queue::TxJob>, st
                 .enqueue(TxJob {
                     tx_id: job.tx_id,
                     retries: job.retries + 1,
+                    payload: job.payload,
                 })
                 .await;
         }
